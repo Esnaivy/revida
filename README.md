@@ -20,11 +20,18 @@ Google Sign-In en Android toma el cliente OAuth web (`client_type` 3) de `google
 
 `380496289978-u7s3ch4k9nnlp5uoed223bh3v2ugplmc.apps.googleusercontent.com`
 
-Para que el inicio de sesión con Google funcione en un dispositivo, en la consola de Firebase hay que:
+El código pide el ID token con ese cliente web. Aun así, Google Sign-In en Android no puede completarse hasta que exista un cliente OAuth Android. El `google-services.json` de este repo no lo trae (`client_type` 1), y sin él Play Services responde `ApiException: 10`. La app muestra ese error en la pantalla de login.
 
-1. Activar los proveedores **Email/Password** y **Google** en Authentication.
-2. Registrar las huellas **SHA-1** y **SHA-256** del keystore con el que firmas la app (Project settings → tu app Android → Add fingerprint). El `google-services.json` actual no incluye un cliente OAuth Android (`client_type` 1), así que falta esa huella. El build de release de este repo firma con el keystore de debug.
-3. Volver a descargar `google-services.json` después de añadir las huellas y reemplazar `android/app/google-services.json`.
+En la consola de Firebase:
+
+1. Activa los proveedores **Email/Password** y **Google** en Authentication.
+2. En Project settings → app Android `app.marcomendez.revida` → Add fingerprint, registra el **SHA-1** y el **SHA-256** del keystore con el que firmas. El release de este repo usa el keystore de debug. En tu máquina:
+
+```bash
+keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android
+```
+
+3. Vuelve a descargar `google-services.json` y reemplaza `android/app/google-services.json`. El archivo nuevo debe incluir un `oauth_client` con `client_type` 1 y `certificate_hash`.
 
 ### Firestore
 

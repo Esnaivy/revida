@@ -91,7 +91,12 @@ class MyApp extends StatelessWidget {
         final isGoingToLogin = state.matchedLocation == '/login';
         final isGoingToRegister = state.matchedLocation == '/register';
 
-        if (authState is AuthLoading || authState is AuthInitial) {
+        // The first session check stays on the splash screen. AuthLoading
+        // during login or register must stay on that screen: leaving it
+        // cancels the Google account picker and the attempt looks like it
+        // did nothing.
+        if (authState is AuthInitial ||
+            (authState is AuthLoading && isGoingToSplash)) {
           return isGoingToSplash ? null : '/splash';
         }
 
