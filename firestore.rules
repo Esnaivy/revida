@@ -1,0 +1,123 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Revida is Android-only and uses Firebase Auth (email/password and Google).
+// Two top-level collections. History, statistics, and streaks are computed
+// on device from the signed-in user's `residuos` documents
+// (ImageDbRevidaCubit / StatsScreen). There is no users, history, stats,
+// or streaks collection.
+//
+// Collection: residuos
+// Document ID: auto-id from collection.add() (ownership is the userId field,
+// not the document id)
+// Fields, all required:
+//   - userId: string (immutable) — Firebase Auth uid. Must equal
+//     request.auth.uid on create and must not change on update.
+//   - categoria: string — one of the labels AnalisisCubit writes.
+//   - confianza: number — ML Kit confidence, inclusive range 0..1.
+//   - imageUrl: string — https URL from Cloudinary, 12..2048 chars, no whitespace.
+//   - date: timestamp (immutable) — FieldValue.serverTimestamp() on create
+//     (must equal request.time). Updates cannot move it.
+//
+// Queries the client runs, which these rules allow:
+//   - residuos where userId == request.auth.uid
+//   - residuos where userId == request.auth.uid orderBy date descending
+//     (composite index userId ASC, date DESC in firestore.indexes.json)
+//   - delete of each document returned by the userId equality query
+// The read rule constrains only userId. Extra resource.data checks would
+// reject those queries, because rules are not filters.
+//
+// Collection: contenedores
+// Shared reference data. Any signed-in user may read (including
+// where tipo == <value> and a full collection read). Clients cannot write.
+// Seed documents from the Firebase console or the Admin SDK.
+// Fields the app reads: tipo, nombre|name, latitud|lat|latitude,
+// longitud|lng|lon|longitude, referencia|direccion|address.
+//
+// Every other path is denied by default.
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isResiduoOwner() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string
+        && request.resource.data[field].size() >= minLen
+        && request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidHttpsUrl(url) {
+      return url is string
+        && url.size() >= 12
+        && url.size() <= 2048
+        && url.matches('^https://\\S+$');
+    }
+
+    function isValidCategoria() {
+      return request.resource.data.categoria in [
+        'Papel y Cartón 📦',
+        'Plástico Reciclable 🥤',
+        'Vidrio 🍾',
+        'Metales / Latas 🥫',
+        'Desconocido - Verifica manualmente ⚠️'
+      ];
+    }
+
+    function isValidConfianza() {
+      return request.resource.data.confianza is number
+        && request.resource.data.confianza >= 0
+        && request.resource.data.confianza <= 1;
+    }
+
+    // Called from both create and update. Method-specific date and
+    // ownership constraints live on the allow rules so create never
+    // touches resource.
+    function isValidResiduo() {
+      return hasOnlyAllowedFields(['categoria', 'confianza', 'imageUrl', 'userId', 'date'])
+        && isValidCategoria()
+        && isValidConfianza()
+        && isValidHttpsUrl(request.resource.data.imageUrl)
+        && validStringLength('userId', 1, 128)
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.date is timestamp;
+    }
+
+    match /residuos/{residuoId} {
+      allow read: if isResiduoOwner();
+
+      allow create: if isAuthenticated()
+        && isValidResiduo()
+        && request.resource.data.date == request.time;
+
+      allow update: if isResiduoOwner()
+        && isValidResiduo()
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.date == resource.data.date
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['categoria', 'confianza', 'imageUrl']);
+
+      allow delete: if isResiduoOwner();
+    }
+
+    match /contenedores/{contenedorId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if false;
+    }
+  }
+}

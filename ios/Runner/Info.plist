@@ -2,26 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>GIDClientID</key>
-	<!-- TODO Replace this value: -->
-	<!-- Copied from GoogleService-Info.plist key CLIENT_ID -->
-	<string>368214688311-7jm2u18la2c7k89igo0ooil7d7d52v6s.apps.googleusercontent.com</string>
-	<!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
-	<!-- Google Sign-in Section -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<!-- TODO Replace this value: -->
-				<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-				<string>com.googleusercontent.apps.368214688311-7jm2u18la2c7k89igo0ooil7d7d52v6s</string>
-			</array>
-		</dict>
-	</array>
-	<!-- End of the Google Sign-in Section -->
 	<key>NSCameraUsageDescription</key>
 	<string>Revida usa la cámara para identificar el residuo que quieres reciclar.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
