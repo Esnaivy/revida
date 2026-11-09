@@ -1,13 +1,21 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:revida/features/pages/domain/datasources/revida_datasource.dart';
+import 'package:revida/features/pages/infrastructure/datasources/revida_datasource_impl.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_state.dart';
 
 class AnalisisCubit extends Cubit<AnalisisState> {
-  AnalisisCubit() : super(AnalisisInitial());
+  AnalisisCubit({RevidaDatasource? datasource})
+    : _datasource = datasource ?? RevidaDatasourceImpl(),
+      super(AnalisisInitial());
+
+  final RevidaDatasource _datasource;
 
   Future<String> _copiarModelo() async {
     final byteData = await rootBundle.load('assets/image_model/model.tflite');
@@ -33,39 +41,52 @@ class AnalisisCubit extends Cubit<AnalisisState> {
         inputImage,
       );
 
-      if (labels.isNotEmpty) {
-        labels.sort((a, b) => b.confidence.compareTo(a.confidence));
+      if (labels.isEmpty) {
+        emit(AnalisisError('No se pudo identificar ningún objeto claramente.'));
+        return;
+      }
 
-        final mejorPrediccion = labels.first;
+      labels.sort((a, b) => b.confidence.compareTo(a.confidence));
 
-        final indice = mejorPrediccion.index;
-        final confianza = mejorPrediccion.confidence;
+      final mejorPrediccion = labels.first;
+      final indice = mejorPrediccion.index;
+      final confianza = mejorPrediccion.confidence;
 
-        final listaEtiquetas = [
-          'cardboard',
-          'glass',
-          'metal',
-          'paper',
-          'plastic',
-        ];
+      const listaEtiquetas = [
+        'cardboard',
+        'glass',
+        'metal',
+        'paper',
+        'plastic',
+      ];
 
-        String objetoDetectado = "desconocido";
-        if (indice >= 0 && indice < listaEtiquetas.length) {
-          objetoDetectado = listaEtiquetas[indice];
-        }
+      final objetoDetectado = (indice >= 0 && indice < listaEtiquetas.length)
+          ? listaEtiquetas[indice]
+          : 'desconocido';
+      final clasificacion = _clasificar(objetoDetectado);
 
-        final categoria = _clasificarEnContenedor(objetoDetectado);
+      final resultado = AnalisisSuccess(
+        objetoDetectado: objetoDetectado,
+        nombreObjeto: clasificacion.nombre,
+        confianza: confianza,
+        categoriaResiduo: clasificacion.categoria,
+        tipoContenedor: clasificacion.tipo,
+        buscandoContenedor: clasificacion.tipo.isNotEmpty,
+      );
+      emit(resultado);
 
+      if (clasificacion.tipo.isEmpty) {
         emit(
-          AnalisisSuccess(
-            objetoDetectado: objetoDetectado,
-            confianza: confianza,
-            categoriaResiduo: categoria,
+          resultado.conAviso(
+            buscandoContenedor: false,
+            avisoContenedor:
+                'No pude asociar este residuo a un tipo de contenedor. Revísalo antes de desecharlo.',
           ),
         );
-      } else {
-        emit(AnalisisError('No se pudo identificar ningún objeto claramente.'));
+        return;
       }
+
+      await _buscarContenedorCercano(resultado);
     } catch (e, s) {
       print(s);
       emit(AnalisisError('Error al analizar la imagen: $e'));
@@ -74,19 +95,117 @@ class AnalisisCubit extends Cubit<AnalisisState> {
     }
   }
 
-  String _clasificarEnContenedor(String etiquetaIA) {
-    final objeto = etiquetaIA.trim().toLowerCase();
+  Future<void> _buscarContenedorCercano(AnalisisSuccess resultado) async {
+    try {
+      final posicion = await _ubicacionActual();
+      if (posicion == null) {
+        emit(
+          resultado.conAviso(
+            buscandoContenedor: false,
+            avisoContenedor:
+                'Activa la ubicación para indicarte el contenedor de ${resultado.nombreObjeto.toLowerCase()} más cercano.',
+          ),
+        );
+        return;
+      }
 
-    if (objeto.contains('cardboard') || objeto.contains('paper')) {
-      return 'Papel y Cartón 📦';
-    } else if (objeto.contains('plastic')) {
-      return 'Plástico Reciclable 🥤';
-    } else if (objeto.contains('glass')) {
-      return 'Vidrio 🍾';
-    } else if (objeto.contains('metal')) {
-      return 'Metales / Latas 🥫';
-    } else {
-      return 'Desconocido - Verifica manualmente ⚠️';
+      final contenedor = await _datasource.contenedorMasCercano(
+        tipo: resultado.tipoContenedor,
+        latitud: posicion.latitude,
+        longitud: posicion.longitude,
+      );
+
+      if (contenedor == null) {
+        emit(
+          resultado.conAviso(
+            buscandoContenedor: false,
+            avisoContenedor:
+                'No hay contenedores de ${resultado.nombreObjeto.toLowerCase()} registrados cerca de ti.',
+          ),
+        );
+        return;
+      }
+
+      emit(
+        resultado.conAviso(
+          buscandoContenedor: false,
+          contenedorCercano: contenedor,
+        ),
+      );
+    } catch (e) {
+      emit(
+        resultado.conAviso(
+          buscandoContenedor: false,
+          avisoContenedor:
+              'No se pudo consultar la base de contenedores. Revisa la conexión con Firebase.',
+        ),
+      );
+    }
+  }
+
+  Future<Position?> _ubicacionActual() async {
+    final servicioActivo = await Geolocator.isLocationServiceEnabled();
+    if (!servicioActivo) return null;
+
+    var permiso = await Geolocator.checkPermission();
+    if (permiso == LocationPermission.denied) {
+      permiso = await Geolocator.requestPermission();
+    }
+    if (permiso == LocationPermission.denied ||
+        permiso == LocationPermission.deniedForever) {
+      return null;
+    }
+
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 12),
+        ),
+      );
+    } on TimeoutException {
+      return null;
+    }
+  }
+
+  ({String nombre, String categoria, String tipo}) _clasificar(String etiqueta) {
+    switch (etiqueta) {
+      case 'cardboard':
+        return (
+          nombre: 'Cartón',
+          categoria: 'Papel y Cartón 📦',
+          tipo: 'papel',
+        );
+      case 'paper':
+        return (
+          nombre: 'Papel',
+          categoria: 'Papel y Cartón 📦',
+          tipo: 'papel',
+        );
+      case 'plastic':
+        return (
+          nombre: 'Plástico',
+          categoria: 'Plástico Reciclable 🥤',
+          tipo: 'plastico',
+        );
+      case 'glass':
+        return (
+          nombre: 'Vidrio',
+          categoria: 'Vidrio 🍾',
+          tipo: 'vidrio',
+        );
+      case 'metal':
+        return (
+          nombre: 'Metal',
+          categoria: 'Metales / Latas 🥫',
+          tipo: 'metal',
+        );
+      default:
+        return (
+          nombre: 'Desconocido',
+          categoria: 'Desconocido - Verifica manualmente ⚠️',
+          tipo: '',
+        );
     }
   }
 }

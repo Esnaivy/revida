@@ -60,7 +60,8 @@ class _CamaraBodyState extends State<_CamaraBody> {
                 '• Coloca un solo residuo a la vez dentro del marco.\n\n'
                 '• Asegúrate de que el objeto se vea por completo.\n\n'
                 '• Busca buena iluminación para que la IA lo reconozca mejor.\n\n'
-                '• Presiona el botón verde para capturar y analizar.',
+                '• Presiona el botón verde para capturar y analizar.\n\n'
+                '• Al terminar verás qué residuo es y el contenedor de ese tipo más cercano para desecharlo.',
                 style: TextStyle(fontSize: 15, color: Colors.black87),
               ),
               const SizedBox(height: 24),

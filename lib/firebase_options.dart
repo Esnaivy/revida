@@ -51,11 +51,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDY0H_ULwE540EfZXkhKRX6GoB1Kb2ScqA',
-    appId: '1:368214688311:android:590a953573f43397da35b2',
-    messagingSenderId: '368214688311',
-    projectId: 'revida-d535b',
-    storageBucket: 'revida-d535b.firebasestorage.app',
+    apiKey: 'AIzaSyAQyWT-aOUeqVtyGkqSBFA-skcOf_x0clU',
+    appId: '1:380496289978:android:ff184e5034267b92ada283',
+    messagingSenderId: '380496289978',
+    projectId: 'revida-bbadb',
+    storageBucket: 'revida-bbadb.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

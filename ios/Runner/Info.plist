@@ -23,7 +23,9 @@
 	</array>
 	<!-- End of the Google Sign-in Section -->
 	<key>NSCameraUsageDescription</key>
-	<string>your usage description here</string>
+	<string>Revida usa la cámara para identificar el residuo que quieres reciclar.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Revida usa tu ubicación para indicarte el contenedor más cercano de ese residuo.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>your usage description here</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

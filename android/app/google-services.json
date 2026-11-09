@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "368214688311",
-    "project_id": "revida-d535b",
-    "storage_bucket": "revida-d535b.firebasestorage.app"
+    "project_number": "380496289978",
+    "project_id": "revida-bbadb",
+    "storage_bucket": "revida-bbadb.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:368214688311:android:590a953573f43397da35b2",
+        "mobilesdk_app_id": "1:380496289978:android:ff184e5034267b92ada283",
         "android_client_info": {
           "package_name": "app.marcomendez.revida"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "380496289978-u7s3ch4k9nnlp5uoed223bh3v2ugplmc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDY0H_ULwE540EfZXkhKRX6GoB1Kb2ScqA"
+          "current_key": "AIzaSyAQyWT-aOUeqVtyGkqSBFA-skcOf_x0clU"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "380496289978-u7s3ch4k9nnlp5uoed223bh3v2ugplmc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

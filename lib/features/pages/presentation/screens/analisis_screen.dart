@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
+import 'package:revida/features/pages/domain/entities/contenedor.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_cubit.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_state.dart';
 
@@ -128,12 +129,12 @@ class _AnalisisSuccessBody extends StatelessWidget {
     final String confianzaStr = (state.confianza * 100).toStringAsFixed(1);
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Container(
-              height: 360,
+              height: 280,
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
@@ -179,13 +180,22 @@ class _AnalisisSuccessBody extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      state.categoriaResiduo.toUpperCase(),
+                      state.nombreObjeto.toUpperCase(),
                       style: textTheme.headlineMedium!.copyWith(
                         color: categoryColor,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.categoriaResiduo,
+                    style: textTheme.titleMedium!.copyWith(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -198,37 +208,11 @@ class _AnalisisSuccessBody extends StatelessWidget {
               ),
             ),
 
-            const Spacer(),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: categoryColor.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    color: categoryColor,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Recuerda depositar este residuo en su contenedor correspondiente antes de registrarlo.',
-                      style: textTheme.bodySmall!.copyWith(
-                        color: Colors.grey.shade700,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             const SizedBox(height: 16),
+
+            _AvisoContenedor(state: state, color: categoryColor),
+
+            const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
@@ -290,6 +274,90 @@ class _AnalisisSuccessBody extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AvisoContenedor extends StatelessWidget {
+  const _AvisoContenedor({required this.state, required this.color});
+
+  final AnalisisSuccess state;
+  final Color color;
+
+  String _texto(ContenedorCercano contenedor) {
+    final distancia = contenedor.distanciaMetros < 1000
+        ? '${contenedor.distanciaMetros.round()} m'
+        : '${(contenedor.distanciaMetros / 1000).toStringAsFixed(1)} km';
+    final lugar = contenedor.referencia.trim().isEmpty
+        ? ''
+        : ' Queda en ${contenedor.referencia.trim()}.';
+    return 'El contenedor de ${_etiquetaTipo(state.tipoContenedor)} más cercano es "${contenedor.nombre}", a $distancia.$lugar Puedes desecharlo ahí.';
+  }
+
+  String _etiquetaTipo(String tipo) {
+    switch (tipo) {
+      case 'papel':
+        return 'papel y cartón';
+      case 'plastico':
+        return 'plástico';
+      case 'vidrio':
+        return 'vidrio';
+      case 'metal':
+        return 'metal';
+      default:
+        return 'ese tipo';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final buscando = state.buscandoContenedor;
+    final contenedor = state.contenedorCercano;
+    final mensaje = contenedor != null
+        ? _texto(contenedor)
+        : (state.avisoContenedor ?? 'Buscando un contenedor cerca de ti...');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (buscando)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.4, color: color),
+              ),
+            )
+          else
+            Icon(
+              contenedor != null
+                  ? Icons.location_on_rounded
+                  : Icons.info_outline_rounded,
+              color: color,
+              size: 24,
+            ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              mensaje,
+              style: textTheme.bodyMedium!.copyWith(
+                color: Colors.grey.shade800,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
