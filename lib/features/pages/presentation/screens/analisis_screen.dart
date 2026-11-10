@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
 import 'package:revida/features/pages/domain/entities/contenedor.dart';
+import 'package:revida/config/theme/app_colors.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_cubit.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_state.dart';
 
@@ -42,14 +43,12 @@ class _AnalisisBodyState extends State<_AnalisisBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
         title: const Text(
           'Análisis IA',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -97,11 +96,18 @@ class _AnalisisBodyState extends State<_AnalisisBody> {
   }
 }
 
-class _AnalisisSuccessBody extends StatelessWidget {
+class _AnalisisSuccessBody extends StatefulWidget {
   const _AnalisisSuccessBody({required this.imagePath, required this.state});
 
   final String imagePath;
   final AnalisisSuccess state;
+
+  @override
+  State<_AnalisisSuccessBody> createState() => _AnalisisSuccessBodyState();
+}
+
+class _AnalisisSuccessBodyState extends State<_AnalisisSuccessBody> {
+  bool _guardando = false;
 
   Color _getColorForCategory(String category) {
     final cat = category.toLowerCase();
@@ -125,6 +131,8 @@ class _AnalisisSuccessBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final state = widget.state;
+    final imagePath = widget.imagePath;
     final categoryColor = _getColorForCategory(state.categoriaResiduo);
     final String confianzaStr = (state.confianza * 100).toStringAsFixed(1);
 
@@ -158,7 +166,7 @@ class _AnalisisSuccessBody extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.card(context),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -192,7 +200,7 @@ class _AnalisisSuccessBody extends StatelessWidget {
                   Text(
                     state.categoriaResiduo,
                     style: textTheme.titleMedium!.copyWith(
-                      color: Colors.black87,
+                      color: AppColors.onSurface(context),
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,
@@ -218,23 +226,36 @@ class _AnalisisSuccessBody extends StatelessWidget {
               width: double.infinity,
               height: 60,
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  await context.read<ImageDbRevidaCubit>().registrarDeteccion(
-                    pathImagen: imagePath,
-                    categoria: state.categoriaResiduo,
-                    confianza: state.confianza,
+                onPressed: _guardando
+                    ? null
+                    : () async {
+                  setState(() => _guardando = true);
+                  final ok = await context
+                      .read<ImageDbRevidaCubit>()
+                      .registrarDeteccion(
+                        pathImagen: imagePath,
+                        categoria: state.categoriaResiduo,
+                        confianza: state.confianza,
+                      );
+
+                  if (!context.mounted) return;
+
+                  final resultado = context.read<ImageDbRevidaCubit>().state;
+                  final mensaje = ok
+                      ? 'Reciclaje registrado correctamente'
+                      : resultado is ImageDbRevidaError
+                      ? resultado.message
+                      : 'No se pudo registrar el reciclaje';
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(mensaje)),
                   );
 
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Reciclaje registrado correctamente'),
-                      ),
-                    );
+                  if (ok) {
+                    context.go('/');
+                    return;
                   }
-
-                  if(!context.mounted) return;
-                  context.push('/');
+                  if (mounted) setState(() => _guardando = false);
                 },
                 icon: const Icon(
                   Icons.check_circle_outline_rounded,

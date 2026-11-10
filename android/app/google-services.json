@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "380496289978-grhknle1gbc453cio7agbaetrcf4uvo7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.marcomendez.revida",
+            "certificate_hash": "8cef88a0cda63d113d4df74edc805617d0e3b540"
+          }
+        },
+        {
           "client_id": "380496289978-u7s3ch4k9nnlp5uoed223bh3v2ugplmc.apps.googleusercontent.com",
           "client_type": 3
         }

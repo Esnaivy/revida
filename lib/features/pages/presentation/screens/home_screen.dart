@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:revida/config/theme/app_colors.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -10,7 +11,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -42,17 +42,24 @@ class _HomeBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: Column(
           children: const [
-            _RachaWidget(),
-            SizedBox(height: 16),
-            _MisResiduosButton(),
-            SizedBox(height: 16),
-            _TotalRecicYUltRecicl(),
-            Spacer(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _RachaWidget(),
+                    SizedBox(height: 16),
+                    _MisResiduosButton(),
+                    SizedBox(height: 16),
+                    _TotalRecicYUltRecicl(),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 12),
             _EscanearButton(),
-            SizedBox(height: 16),
           ],
         ),
       ),
@@ -66,7 +73,9 @@ class _TotalRecicYUltRecicl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    const verdeOscuro = Color(0xFF1B5E20);
+    final verdeOscuro = AppColors.isDark(context)
+        ? const Color(0xFFB7F7C8)
+        : const Color(0xFF1B5E20);
 
     return BlocBuilder<ImageDbRevidaCubit, ImageDbRevidaState>(
       builder: (context, state) {
@@ -93,7 +102,7 @@ class _TotalRecicYUltRecicl extends StatelessWidget {
                   height: 180,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    color: const Color(0xFFE8F5E9),
+                    color: AppColors.tint(context),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
@@ -118,7 +127,7 @@ class _TotalRecicYUltRecicl extends StatelessWidget {
                           alignment: Alignment.center,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.card(context),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -141,7 +150,7 @@ class _TotalRecicYUltRecicl extends StatelessWidget {
                   height: 180,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    color: const Color(0xFFE8F5E9),
+                    color: AppColors.tint(context),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
@@ -167,7 +176,7 @@ class _TotalRecicYUltRecicl extends StatelessWidget {
                           alignment: Alignment.center,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.card(context),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: ultimo == null
@@ -221,7 +230,7 @@ class _RachaWidget extends StatelessWidget {
       width: double.infinity,
       height: 130,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -244,7 +253,7 @@ class _RachaWidget extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F7FA), // Gris muy claro adentro
+                color: AppColors.inset(context),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -290,9 +299,8 @@ class _EscanearButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/camara'),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         width: double.infinity,
-        height: 80,
         decoration: BoxDecoration(
           color: const Color(0xFF10B981),
           borderRadius: BorderRadius.circular(24),
@@ -364,7 +372,7 @@ class _MisResiduosButton extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card(context),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(

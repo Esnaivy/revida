@@ -133,11 +133,15 @@ class AnalisisCubit extends Cubit<AnalisisState> {
         ),
       );
     } catch (e) {
+      final detalle = e.toString().toLowerCase();
+      final bloqueado = detalle.contains('permission-denied') ||
+          detalle.contains('permission_denied');
       emit(
         resultado.conAviso(
           buscandoContenedor: false,
-          avisoContenedor:
-              'No se pudo consultar la base de contenedores. Revisa la conexión con Firebase.',
+          avisoContenedor: bloqueado
+              ? 'Firestore bloqueó la lectura de contenedores. Inicia sesión y publica las reglas con firebase deploy --only firestore.'
+              : 'No se pudo consultar la base de contenedores. Revisa la conexión con Firebase.',
         ),
       );
     }

@@ -44,7 +44,7 @@ class ImageDbRevidaCubit extends Cubit<ImageDbRevidaState> {
 
   // Registrar detección
 
-  Future<void> registrarDeteccion({
+  Future<bool> registrarDeteccion({
     required String pathImagen,
     required String categoria,
     required double confianza,
@@ -53,12 +53,31 @@ class ImageDbRevidaCubit extends Cubit<ImageDbRevidaState> {
       emit(ImageDbRevidaLoading());
 
       await repository.registrarDeteccion(pathImagen, categoria, confianza);
-
-      emit(ImageDbRevidaSuccess());
-      emit(ImageDbRevidaInitial());
     } catch (e) {
-      emit(ImageDbRevidaError(e.toString()));
+      emit(ImageDbRevidaError(_mensajeDeError(e)));
+      return false;
     }
+
+    await loadReciclajes();
+    return true;
+  }
+
+  String _mensajeDeError(Object error) {
+    final detalle = error.toString().toLowerCase();
+    if (detalle.contains('permission-denied') ||
+        detalle.contains('permission_denied')) {
+      return 'Firestore bloqueó el registro. Inicia sesión y publica las reglas con firebase deploy --only firestore.';
+    }
+    if (detalle.contains('failed-precondition') || detalle.contains('index')) {
+      return 'El registro se guardó, pero la lista todavía no puede ordenarse. Cierra la app y ábrela de nuevo.';
+    }
+    if (detalle.contains('cloudinary') || detalle.contains('subir imagen')) {
+      return 'No se pudo subir la foto. Revisa la conexión e inténtalo de nuevo.';
+    }
+    if (detalle.contains('sesión') || detalle.contains('sesion')) {
+      return 'No hay una sesión activa. Vuelve a iniciar sesión.';
+    }
+    return 'No se pudo registrar el reciclaje. Revisa la conexión con Firebase.';
   }
 
   // Cargar reciclajes
@@ -73,7 +92,7 @@ class ImageDbRevidaCubit extends Cubit<ImageDbRevidaState> {
 
       emit(ImageDbRevidaLoaded(reciclajes, racha));
     } catch (e) {
-      emit(ImageDbRevidaError(e.toString()));
+      emit(ImageDbRevidaError(_mensajeDeError(e)));
     }
   }
 

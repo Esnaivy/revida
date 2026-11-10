@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:revida/config/theme/app_colors.dart';
+import 'package:revida/config/theme/theme_controller.dart';
 import 'package:revida/features/auth/presentation/cubits/auth/auth_cubit.dart';
 
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
@@ -24,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(130, 105, 255, 85),
+                      color: AppColors.tint(context),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -54,7 +56,39 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 28),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Apariencia',
+                      style: textTheme.titleMedium!.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                        value: ThemeMode.system,
+                        label: Text('Sistema'),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        label: Text('Claro'),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        label: Text('Oscuro'),
+                      ),
+                    ],
+                    selected: {ThemeScope.of(context).mode},
+                    onSelectionChanged: (selection) {
+                      ThemeScope.of(context).setMode(selection.first);
+                    },
+                  ),
+                  const SizedBox(height: 28),
                   _BotonAdvertencia(
                     textContent: 'Borrar data',
                     icon: Icons.delete,
@@ -168,7 +202,7 @@ class _BotonAdvertencia extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 32,
-                    color: Color.fromARGB(255, 37, 37, 37),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(width: 16),

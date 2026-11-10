@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:revida/config/theme/app_colors.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
 import 'package:revida/features/pages/presentation/screens/flow_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -12,9 +13,11 @@ class StatsScreen extends StatefulWidget {
   @override
   State<StatsScreen> createState() => _StatsScreenState();
 
-  static BoxDecoration _cardDecoration() {
+  static BoxDecoration _cardDecoration(BuildContext context) {
     return BoxDecoration(
-      color: const Color.fromARGB(255, 203, 255, 207),
+      color: AppColors.isDark(context)
+          ? const Color(0xFF1B3A2A)
+          : const Color.fromARGB(255, 203, 255, 207),
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
@@ -55,7 +58,7 @@ class _StatsScreenState extends State<StatsScreen> {
               Container(
                 height: 500,
                 width: double.infinity,
-                decoration: StatsScreen._cardDecoration(),
+                decoration: StatsScreen._cardDecoration(context),
                 child: Center(
                   child: _currentOption == Options.option1
                       ? BarChartSample1()
@@ -164,7 +167,7 @@ class _GeneralStats extends StatelessWidget {
             height: 180,
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            decoration: StatsScreen._cardDecoration(),
+            decoration: StatsScreen._cardDecoration(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -211,7 +214,7 @@ class _SingleChoiceState extends State<SingleChoice> {
   Widget build(BuildContext context) {
     return SegmentedButton<Options>(
       style: SegmentedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.card(context),
         selectedBackgroundColor: const Color(0xFF11C95A),
         selectedForegroundColor: Colors.white,
       ),

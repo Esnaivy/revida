@@ -1,13 +1,25 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:revida/features/auth/domain/datasources/auth_datasource.dart';
 import 'package:revida/features/auth/domain/entities/app_user.dart';
-import 'package:revida/features/auth/presentation/cubits/auth/auth_cubit.dart';
 
 //Firebase authentication - Backend
 
 class AuthDatasourceImpl extends AuthDatasource {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+
+  /// Web OAuth client (`client_type` 3) from android/app/google-services.json.
+  /// Android uses this as serverClientId so Firebase receives an ID token.
+  /// The Android OAuth client (`client_type` 1) is created only after the
+  /// signing SHA-1 is registered in the Firebase console.
+  static const String _googleServerClientId =
+      '380496289978-u7s3ch4k9nnlp5uoed223bh3v2ugplmc.apps.googleusercontent.com';
+
+  final GoogleSignIn googleSignIn = GoogleSignIn(
+    scopes: const ['email'],
+    serverClientId: _googleServerClientId,
+  );
 
   //! Login
   @override
@@ -79,6 +91,7 @@ class AuthDatasourceImpl extends AuthDatasource {
   //! Logout
   @override
   Future<void> logout() async {
+    await googleSignIn.signOut().catchError((Object _) => null);
     await firebaseAuth.signOut();
   }
 
@@ -97,37 +110,53 @@ class AuthDatasourceImpl extends AuthDatasource {
   @override
   Future<AppUser?> signInWithGoogle() async {
     try {
-      //begin the interactive sign-in process
-      final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
+      // A previous attempt can leave a Google session without an ID token.
+      await googleSignIn.signOut().catchError((Object _) => null);
 
-      //user cancelled sign-in
-      if(gUser == null) return null;
+      final GoogleSignInAccount? gUser = await googleSignIn.signIn();
 
-      //obtain auth details from request
+      // The account picker was closed without choosing an account.
+      if (gUser == null) return null;
+
       final GoogleSignInAuthentication gAuth = await gUser.authentication;
+      final String? idToken = gAuth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception(
+          'Google no entregó el ID token. Activa el proveedor Google en Firebase Authentication y registra el SHA-1 de tu keystore en la app Android de revida-bbadb.',
+        );
+      }
 
-      //Create a credential for the user
       final credential = GoogleAuthProvider.credential(
         accessToken: gAuth.accessToken,
-        idToken:  gAuth.idToken
+        idToken: idToken,
       );
 
-      //sign in with these credentials
-      UserCredential userCredential = await firebaseAuth.signInWithCredential(credential);
+      final UserCredential userCredential = await firebaseAuth
+          .signInWithCredential(credential);
+      final User? firebaseUser = userCredential.user;
+      if (firebaseUser == null) {
+        throw Exception('Firebase no devolvió un usuario de Google.');
+      }
 
-      //firebase user
-      final firebaseUser = userCredential.user;
-
-      //user cancelled sign-in process
-      if(firebaseUser == null) return null;
-      
-      AppUser appUser = AppUser(uid: firebaseUser.uid, email: firebaseUser.email ?? '');
-
-      return appUser;
-    } catch (e) { 
-      AuthError(e.toString());
-      return null;
+      return AppUser(
+        uid: firebaseUser.uid,
+        email: firebaseUser.email ?? gUser.email,
+      );
+    } on PlatformException catch (e) {
+      throw Exception(_googleSignInMessage(e));
     }
+  }
+
+  String _googleSignInMessage(PlatformException error) {
+    final String details =
+        '${error.code} ${error.message ?? ''} ${error.details ?? ''}';
+    if (details.contains('ApiException: 10')) {
+      return 'Google rechazó la app (ApiException 10). En Firebase, proyecto revida-bbadb, agrega el SHA-1 y el SHA-256 de tu keystore en la app Android y vuelve a descargar google-services.json.';
+    }
+    if (error.code == GoogleSignIn.kNetworkError) {
+      return 'Sin conexión al iniciar sesión con Google.';
+    }
+    return 'No se pudo iniciar sesión con Google: ${error.message ?? error.code}';
   }
   
 

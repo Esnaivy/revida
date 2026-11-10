@@ -38,10 +38,6 @@ class _LoginView extends StatelessWidget {
         if (state is AuthError) {
           showSnackbar(state.message);
         }
-
-        if (state is Unauthenticated) {
-          showSnackbar('No se pudo autenticar');
-        }
       },
       child: BackgroundStyle(content: _LoginBody()),
     );
@@ -162,9 +158,11 @@ class _LoginBody extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 '¿No tienes una cuenta? ',
-                style: TextStyle(color: Colors.black87),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               GestureDetector(
                 onTap: () => context.push('/register'),

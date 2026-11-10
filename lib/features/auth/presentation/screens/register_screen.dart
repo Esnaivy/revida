@@ -37,10 +37,6 @@ class _RegisterView extends StatelessWidget {
         if (state is AuthError) {
           showSnackbar(state.message);
         }
-
-        if (state is Unauthenticated) {
-          showSnackbar('No se pudo autenticar');
-        }
       },
       child: BackgroundStyle(content: _RegisterBody()),
     );
@@ -76,7 +72,7 @@ class _RegisterBody extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 20),
