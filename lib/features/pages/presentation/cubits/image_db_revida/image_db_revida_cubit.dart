@@ -59,7 +59,7 @@ class ImageDbRevidaCubit extends Cubit<ImageDbRevidaState> {
     }
 
     await loadReciclajes();
-    return state is ImageDbRevidaLoaded;
+    return true;
   }
 
   String _mensajeDeError(Object error) {
@@ -67,6 +67,9 @@ class ImageDbRevidaCubit extends Cubit<ImageDbRevidaState> {
     if (detalle.contains('permission-denied') ||
         detalle.contains('permission_denied')) {
       return 'Firestore bloqueó el registro. Inicia sesión y publica las reglas con firebase deploy --only firestore.';
+    }
+    if (detalle.contains('failed-precondition') || detalle.contains('index')) {
+      return 'El registro se guardó, pero la lista todavía no puede ordenarse. Cierra la app y ábrela de nuevo.';
     }
     if (detalle.contains('cloudinary') || detalle.contains('subir imagen')) {
       return 'No se pudo subir la foto. Revisa la conexión e inténtalo de nuevo.';

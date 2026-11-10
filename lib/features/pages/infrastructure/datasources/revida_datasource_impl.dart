@@ -39,18 +39,22 @@ class RevidaDatasourceImpl extends RevidaDatasource {
         return [];
       }
 
-      // 2. Consultar la colección filtrando por el userId
+      final coleccion = FirebaseFirestore.instance.collection('residuos');
+      QuerySnapshot<Map<String, dynamic>> querySnapshot;
+      try {
+        querySnapshot = await coleccion
+            .where('userId', isEqualTo: uid)
+            .orderBy('date', descending: true)
+            .get();
+      } catch (e) {
+        // The composite index can still be building right after the first
+        // saves. The equality query does not need it; sort on the device.
+        print("Consulta ordenada no disponible, se ordena en el dispositivo: $e");
+        querySnapshot = await coleccion.where('userId', isEqualTo: uid).get();
+      }
 
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('residuos')
-          .where('userId', isEqualTo: uid)
-          .orderBy('date', descending: true)
-          .get();
-
-      // 3. Mapear los documentos a tu entidad Reciclaje
-      return querySnapshot.docs.map((doc) {
+      final reciclajes = querySnapshot.docs.map((doc) {
         final data = doc.data();
-        print('Se mapeo correctamente');
 
         return Reciclaje(
           categoria: data['categoria'] ?? '',
@@ -59,6 +63,8 @@ class RevidaDatasourceImpl extends RevidaDatasource {
           date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
         );
       }).toList();
+      reciclajes.sort((a, b) => b.date.compareTo(a.date));
+      return reciclajes;
     } catch (e) {
       print("Error al cargar reciclajes: $e");
       rethrow;
