@@ -13,25 +13,19 @@ class RevidaDatasourceImpl extends RevidaDatasource {
     String imageUrl,
     double confianza,
   ) async {
-    try {
-      String? uid = FirebaseAuth.instance.currentUser?.uid;
+    final String? uid = FirebaseAuth.instance.currentUser?.uid;
 
-      if (uid != null) {
-        // 3. Guardar todo en Firestore (colección 'residuos')
-        await FirebaseFirestore.instance.collection('residuos').add({
-          'categoria': categoria,
-          'confianza': confianza,
-          'imageUrl': imageUrl,
-          'userId': uid,
-          'date': FieldValue.serverTimestamp(),
-        });
-        print("¡Éxito! Imagen y datos guardados.");
-      } else {
-        print("Error: No hay usuario autenticado.");
-      }
-    } catch (e) {
-      print("Error en el proceso: $e");
+    if (uid == null) {
+      throw Exception('No hay una sesión activa.');
     }
+
+    await FirebaseFirestore.instance.collection('residuos').add({
+      'categoria': categoria,
+      'confianza': confianza,
+      'imageUrl': imageUrl,
+      'userId': uid,
+      'date': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
@@ -67,7 +61,7 @@ class RevidaDatasourceImpl extends RevidaDatasource {
       }).toList();
     } catch (e) {
       print("Error al cargar reciclajes: $e");
-      return [];
+      rethrow;
     }
   }
 
