@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:revida/config/theme/app_colors.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
 
 class CalendarView extends StatefulWidget {
@@ -59,16 +60,30 @@ class _CalendarViewState extends State<CalendarView> {
                   return [];
                 },
 
-                headerStyle: const HeaderStyle(
+                headerStyle: HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
                   titleTextStyle: TextStyle(
-                    color: Color(0xFF2E7D32),
+                    color: AppColors.isDark(context)
+                        ? const Color(0xFFB7F7C8)
+                        : const Color(0xFF2E7D32),
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
+                  leftChevronIcon: Icon(
+                    Icons.chevron_left,
+                    color: AppColors.onSurface(context),
+                  ),
+                  rightChevronIcon: Icon(
+                    Icons.chevron_right,
+                    color: AppColors.onSurface(context),
+                  ),
                 ),
 
+                daysOfWeekStyle: DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: AppColors.onSurface(context)),
+                  weekendStyle: const TextStyle(color: Colors.redAccent),
+                ),
                 calendarStyle: CalendarStyle(
                   selectedDecoration: const BoxDecoration(
                     color: Color(0xFF10B981),
@@ -82,9 +97,14 @@ class _CalendarViewState extends State<CalendarView> {
                     color: Color(0xFF2E7D32),
                     shape: BoxShape.circle,
                   ),
-                  defaultTextStyle: const TextStyle(
-                    color: Color(0xFF2E7D32),
+                  defaultTextStyle: TextStyle(
+                    color: AppColors.isDark(context)
+                        ? const Color(0xFFB7F7C8)
+                        : const Color(0xFF2E7D32),
                     fontWeight: FontWeight.bold,
+                  ),
+                  outsideTextStyle: TextStyle(
+                    color: AppColors.onSurface(context).withValues(alpha: 0.4),
                   ),
                   weekendTextStyle: const TextStyle(color: Colors.redAccent),
                 ),
@@ -98,7 +118,7 @@ class _CalendarViewState extends State<CalendarView> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: AppColors.card(context).withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -111,8 +131,10 @@ class _CalendarViewState extends State<CalendarView> {
                         }))
                     ? "♻️ Registraste material este día!!"
                     : "😢 No hay registros este día",
-                style: const TextStyle(
-                  color: Color(0xFF2E7D32),
+                style: TextStyle(
+                  color: AppColors.isDark(context)
+                      ? const Color(0xFFB7F7C8)
+                      : const Color(0xFF2E7D32),
                   fontWeight: FontWeight.bold,
                 ),
               ),

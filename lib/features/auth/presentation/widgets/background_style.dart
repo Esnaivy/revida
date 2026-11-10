@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:revida/config/theme/app_colors.dart';
 
 class BackgroundStyle extends StatefulWidget {
   final Widget content;
@@ -50,7 +51,7 @@ class _BackgroundStyleState extends State<BackgroundStyle> {
 
     return Scaffold(
       // 1. FONDO ACTUALIZADO: Gris súper claro para dar un aspecto limpio
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           ...items.map((item) {
@@ -79,7 +80,7 @@ class _BackgroundStyleState extends State<BackgroundStyle> {
                   padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 78),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.card(context),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(

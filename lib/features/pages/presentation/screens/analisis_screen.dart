@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
 import 'package:revida/features/pages/domain/entities/contenedor.dart';
+import 'package:revida/config/theme/app_colors.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_cubit.dart';
 import 'package:revida/features/pages/presentation/cubits/analisis/analisis_state.dart';
 
@@ -42,14 +43,12 @@ class _AnalisisBodyState extends State<_AnalisisBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
         title: const Text(
           'Análisis IA',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -158,7 +157,7 @@ class _AnalisisSuccessBody extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.card(context),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -192,7 +191,7 @@ class _AnalisisSuccessBody extends StatelessWidget {
                   Text(
                     state.categoriaResiduo,
                     style: textTheme.titleMedium!.copyWith(
-                      color: Colors.black87,
+                      color: AppColors.onSurface(context),
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,

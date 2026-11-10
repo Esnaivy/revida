@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:revida/config/theme/app_colors.dart';
 import 'package:revida/features/pages/domain/entities/reciclaje.dart';
 import 'package:revida/features/pages/presentation/cubits/image_db_revida/image_db_revida_cubit.dart';
 
@@ -47,7 +48,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
 
     return RichText(
       text: TextSpan(
-        style: TextStyle(color: Colors.black),
+        style: TextStyle(color: AppColors.onSurface(context)),
         children: [
           TextSpan(text: text.substring(0, startIndex)),
           TextSpan(
@@ -73,11 +74,11 @@ class _HistorialScreenState extends State<HistorialScreen> {
         label: Text(category),
         selected: isSelected,
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.grey[800],
+          color: isSelected ? Colors.white : AppColors.onSurface(context),
           fontWeight: FontWeight.w500,
         ),
         selectedColor: const Color(0xFF11C95A),
-        backgroundColor: Colors.grey.shade200,
+        backgroundColor: AppColors.inset(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         onSelected: (value) {
           setState(() {
@@ -116,7 +117,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.card(context),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(

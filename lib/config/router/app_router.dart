@@ -2,18 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:revida/config/config.dart';
+import 'package:revida/config/theme/theme_controller.dart';
 import 'package:revida/features/auth/presentation/cubits/auth/auth_cubit.dart';
 import 'package:revida/features/auth/presentation/screens/screens.dart';
 import 'package:revida/features/pages/presentation/screens.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
     final authCubit = context.read<AuthCubit>();
 
-    final router = GoRouter(
+    _router = GoRouter(
       initialLocation: '/splash',
 
       refreshListenable: GoRouterRefreshStream(authCubit.stream),
@@ -114,12 +123,29 @@ class MyApp extends StatelessWidget {
         return null;
       },
     );
+  }
 
-    return MaterialApp.router(
-      routerConfig: router,
-      debugShowCheckedModeBanner: false,
-      theme: lightMode,
-      darkTheme: darkMode,
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeScope.of(context);
+
+    return ListenableBuilder(
+      listenable: theme,
+      builder: (context, _) {
+        return MaterialApp.router(
+          routerConfig: _router,
+          debugShowCheckedModeBanner: false,
+          theme: lightMode,
+          darkTheme: darkMode,
+          themeMode: theme.mode,
+        );
+      },
     );
   }
 }

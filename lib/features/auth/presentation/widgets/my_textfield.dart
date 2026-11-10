@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:revida/config/theme/app_colors.dart';
 
 class MyTextfield extends StatelessWidget {
   final String? errorMessage;
@@ -27,7 +28,7 @@ class MyTextfield extends StatelessWidget {
       onFieldSubmitted: onFieldSubmitted,
       decoration: InputDecoration(
         // Fondo gris muy claro para contrastar suavemente con la tarjeta blanca
-        fillColor: const Color(0xFFF5F7FA), 
+        fillColor: AppColors.inset(context), 
         filled: true,
         
         hintText: hintText,

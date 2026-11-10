@@ -109,23 +109,24 @@ class RevidaDatasourceImpl extends RevidaDatasource {
     required double longitud,
   }) async {
     final coleccion = FirebaseFirestore.instance.collection('contenedores');
-    var snapshot = await coleccion.where('tipo', isEqualTo: tipo).get();
-
-    if (snapshot.docs.isEmpty) {
-      snapshot = await coleccion.get();
-    }
+    // Read every container and match the type in the app. Documents in the
+    // console often use "Papel", "plástico" or a GeoPoint instead of the
+    // exact fields the first version expected.
+    final snapshot = await coleccion.get();
 
     ContenedorCercano? masCercano;
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      if (_normalizarTipo(data['tipo']?.toString() ?? '') != tipo) continue;
+      if (_normalizarTipo(data['tipo']?.toString() ?? data['type']?.toString() ?? '') !=
+          tipo) {
+        continue;
+      }
 
-      final lat = _comoDouble(data['latitud'] ?? data['lat'] ?? data['latitude']);
-      final lng = _comoDouble(
-        data['longitud'] ?? data['lng'] ?? data['lon'] ?? data['longitude'],
-      );
-      if (lat == null || lng == null) continue;
+      final coords = _coordenadas(data);
+      if (coords == null) continue;
+      final lat = coords.$1;
+      final lng = coords.$2;
 
       final distancia = _distanciaMetros(latitud, longitud, lat, lng);
       final candidato = ContenedorCercano(
@@ -149,8 +150,29 @@ class RevidaDatasourceImpl extends RevidaDatasource {
 
   double? _comoDouble(dynamic value) {
     if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value);
+    if (value is String) {
+      return double.tryParse(value.trim().replaceAll(',', '.'));
+    }
     return null;
+  }
+
+  (double, double)? _coordenadas(Map<String, dynamic> data) {
+    final geo = data['ubicacion'] ?? data['location'] ?? data['geo'] ?? data['posicion'];
+    if (geo is GeoPoint) return (geo.latitude, geo.longitude);
+    if (geo is Map) {
+      final lat = _comoDouble(geo['latitud'] ?? geo['lat'] ?? geo['latitude']);
+      final lng = _comoDouble(
+        geo['longitud'] ?? geo['lng'] ?? geo['lon'] ?? geo['longitude'],
+      );
+      if (lat != null && lng != null) return (lat, lng);
+    }
+
+    final lat = _comoDouble(data['latitud'] ?? data['lat'] ?? data['latitude']);
+    final lng = _comoDouble(
+      data['longitud'] ?? data['lng'] ?? data['lon'] ?? data['longitude'],
+    );
+    if (lat == null || lng == null) return null;
+    return (lat, lng);
   }
 
   String _normalizarTipo(String raw) {
